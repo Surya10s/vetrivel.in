@@ -25,7 +25,15 @@ export default function Hero() {
                 padding: "0 6vw",
             }}
         >
+            <style>{`
+                @media (max-width: 768px) {
+                    .hero-images { display: none !important; }
+                    .hero-grid { grid-template-columns: 1fr !important; }
+                }
+            `}</style>
+
             <div
+                className="hero-grid"
                 style={{
                     width: "100%",
                     display: "grid",
@@ -117,6 +125,7 @@ export default function Hero() {
 
                 {/* RIGHT IMAGE */}
                 <div
+                    className="hero-images"
                     style={{
                         display: "grid",
                         gridTemplateColumns: "repeat(3, 1fr)",
@@ -158,10 +167,7 @@ export default function Hero() {
                             boxShadow: "0 40px 80px rgba(0,0,0,0.08)"
                         }}
                     />
-
                 </div>
-
-
             </div>
         </section>
     );

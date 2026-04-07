@@ -25,7 +25,7 @@ export default function Nav() {
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
-  const links = ["About", "Services", "Fleet", "Story", "Contact"];
+  const links = ["About", "Materials", "Fleet", "Why Us", "Contact"];
 
   return (
     <>
@@ -147,14 +147,6 @@ export default function Nav() {
           }}>vetrivel</span>
         </a>
 
-        {/* ── Desktop Links ── */}
-        {/* <div className="dnav" style={{ display: "flex", gap: 36, alignItems: "center" }}>
-          {links.map(l => (
-            <a key={l} href={`#${l.toLowerCase()}`} className="nav-link">{l}</a>
-          ))}
-          <div style={{ width: 1, height: 18, background: C.border, marginLeft: 4 }} />
-          <a href="#contact" className="quote-btn">Get a Quote</a>
-        </div> */}
 
         {/* ── Hamburger ── */}
         <button
