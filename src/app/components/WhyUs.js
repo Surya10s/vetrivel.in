@@ -38,7 +38,7 @@ export default function WhyUs() {
 
   return (
     <section
-      id="story"
+      id="why us"
       className="py-28 px-6 bg-white"
     >
       <div ref={ref} className="max-w-6xl mx-auto">

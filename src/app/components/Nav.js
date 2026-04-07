@@ -25,7 +25,7 @@ export default function Nav() {
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
-  const links = ["About", "Materials", "Fleet", "Why Us", "Contact"];
+  const links = ["About", "materials", "Fleet", "why us", "Contact"];
 
   return (
     <>
