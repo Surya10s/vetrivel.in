@@ -4,6 +4,17 @@ import { useGLTF, Environment } from '@react-three/drei'
 import * as THREE from 'three'
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Suspense } from 'react'
+import { Html, useProgress } from '@react-three/drei'
+
+function Loader() {
+  const { progress } = useProgress()
+  return (
+    <Html center style={{ color: 'white', fontFamily: 'Rajdhani' }}>
+      {progress.toFixed(0)} % loading...
+    </Html>
+  )
+}
 
 // ─── Preload truck asset ─────────────────────────────────────────────────────
 useGLTF.preload('/truck.glb')
@@ -17,7 +28,7 @@ const SECTIONS = [
     sub: 'Premium Msand & gravel delivered across Chennai with our own fleet of trucks. From 5 tons to 50 tons — reliable supply, on-time delivery, every project.',
     cta: '26 years ',
     accent: '#FFFFFF',
-    pose: { x: 13, z: 0, rotY: 0 },
+    pose: { x: 13, z: -5, rotY: 0 },
   },
   {
     id: 'product',
@@ -25,7 +36,7 @@ const SECTIONS = [
     heading: 'OUR PRODUCTS',
     sub: 'High-quality building materials for every project scale',
     accent: '#ff6b35',
-    pose: { x: 0, z: 0, rotY: 0 },
+    pose: { x: 0, z: -5, rotY: 0 },
   },
   {
     id: 'service',
@@ -43,7 +54,7 @@ const SECTIONS = [
     sub: 'Call or WhatsApp us to place your order. Fast delivery across Chennai with trusted quality and transparent pricing.',
     cta: 'Get In Touch →',
     accent: '#c084fc',
-    pose: { x: -2, y: 12, z: 9, rotY: (-3 * Math.PI) / 3 },
+    pose: { x: -3, y: 12, z: 5, rotY: (-3 * Math.PI) / 3 },
   },
 ]
 
@@ -389,32 +400,6 @@ function RightPanel({ activeSection, isMobile }) {
 
 
         <>
-
-          {/* <motion.div
-            initial={{ opacity: 0, x: 140 }} 
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 140 }}
-            transition={{ duration: 0.5 }}
-            className="absolute left-[clamp(16px,5vw,80px)] top-[15%] -translate-y-1/2 z-20 pointer-events-none select-none right-[18px]"
-          >
-            {['call', '950000779'].map((val) => (
-              <div
-                key={val}
-                className={`text-center mb-2 ${isMobile ? 'text-xl' : 'text-3xl' }`}
-                 initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.18 }}
-            style={{
-              ...headingStyle,
-              fontSize: 'clamp(2.2rem, 6vw, 6.5rem)',
-            }}
-              >
-                {val}
-              </div>
-            ))}
-          </motion.div> */}
-
-
           <motion.div
             key="contact"
             initial={{ opacity: 0, x: 40 }}
@@ -592,6 +577,7 @@ export default function Scene() {
           // Performance: limit pixel ratio on mobile
           dpr={isMobile ? [1, 1.5] : [1, 2]}
         >
+
           <Environment preset="city" />
           <ambientLight intensity={0.6} />
           <spotLight position={[10, 10, 10]} intensity={1.2} />
