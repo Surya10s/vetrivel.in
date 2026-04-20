@@ -7,17 +7,22 @@ import Footer from "./components/Footer";
 import Hero from "./components/Hero";
 import WhyUs from "./components/WhyUs";
 import Services from "./components/Services";
-
+import Truck from "./components/Truck"
+import Back from "./components/back"
+import Claude from "./components/claude"
 export default function Home() {
   return (
     <>
-      <Nav />
+      {/* <Nav />
       <Hero />
       <Services />
       <Fleet />
-      {/* <Stats /> */}
       <WhyUs />
-      <Contact />
-      <Footer /></>
+      <Contact /> */}
+      <Truck/>
+      {/* <Claude/> */}
+      {/* <Back/> */}
+      {/* <Footer /> */}
+      </>
   );
 }

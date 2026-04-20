@@ -113,7 +113,7 @@ export default function Nav() {
       `}</style>
 
       <nav style={{
-        position: "absolute", top: 0, left: 0, right: 0, zIndex: 200,
+        position: "relative", top: 0, left: 0, right: 0, zIndex: 200,
         height: 64,
         padding: "0 5vw",
         display: "flex", alignItems: "center", justifyContent: "space-between",
