@@ -1,5 +1,6 @@
+// Content is user-generated and unverified.
 'use client'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, invalidate } from '@react-three/fiber'
 import { useGLTF, Environment, Html, useProgress } from '@react-three/drei'
 import * as THREE from 'three'
 import { useRef, useMemo, useState, useEffect, useCallback, memo } from 'react'
@@ -10,10 +11,11 @@ import { Suspense } from 'react'
 useGLTF.preload('/truck.glb')
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const HOLD_MS = 900
+const HOLD_MS         = 900
 const WHEEL_THRESHOLD = 100
-const TWO_PI_R = 2 * Math.PI * 12
-const EPS = 0.001
+const TWO_PI_R        = 2 * Math.PI * 12
+// Tighter epsilon so damp truly settles and stops calling invalidate
+const EPS             = 0.005
 
 const SECTIONS = [
   {
@@ -22,14 +24,14 @@ const SECTIONS = [
     sub: 'Premium Msand & gravel delivered across Chennai with our own fleet of trucks. From 5 tons to 50 tons — reliable supply, on-time delivery, every project.',
     cta: '26 years',
     accent: '#FFFFFF',
-    pose: { x: 13, z: -5, rotY: 0 },
+    pose: { x: 13, z: -3, rotY: 0 },
   },
   {
     id: 'product', label: 'PRODUCT',
     heading: 'OUR PRODUCTS',
     sub: 'High-quality building materials for every project scale',
     accent: '#ff6b35',
-    pose: { x: 0, z: -5, rotY: 0 },
+    pose: { x: 0, z: -3, rotY: 0 },
   },
   {
     id: 'service', label: 'OUR FLEET',
@@ -57,7 +59,7 @@ const PRODUCTS = [
   { title: 'Dust',         img: '/dust.jpg' },
 ]
 
-// ─── Shared singleton material (never recreated) ──────────────────────────────
+// ─── Singleton wireframe material ─────────────────────────────────────────────
 const WIRE_MAT = new THREE.MeshBasicMaterial({
   color: '#ffffff',
   wireframe: true,
@@ -74,7 +76,6 @@ const HEADING_STYLE = {
   fontFamily: "'Bebas Neue', sans-serif",
   textShadow: '0 4px 40px rgba(0,0,0,0.4)',
 }
-
 const BODY_STYLE = {
   fontFamily: "'Rajdhani', sans-serif",
   color: 'rgba(245,240,232,0.7)',
@@ -82,13 +83,13 @@ const BODY_STYLE = {
   lineHeight: 1.6,
 }
 
-// Stable motion variant objects (no re-creation per render)
-const FADE_INIT  = { opacity: 0, x: -40 }
-const FADE_IN    = { opacity: 1, x:   0 }
-const FADE_OUT   = { opacity: 0, x: -40 }
-const FADE_R_INIT = { opacity: 0, x: 40 }
-const FADE_R_IN   = { opacity: 1, x:  0 }
-const FADE_R_OUT  = { opacity: 0, x: 40 }
+// ─── Stable motion variant objects ───────────────────────────────────────────
+const FADE_INIT   = { opacity: 0, x: -40 }
+const FADE_IN     = { opacity: 1, x:   0 }
+const FADE_OUT    = { opacity: 0, x: -40 }
+const FADE_R_INIT = { opacity: 0, x:  40 }
+const FADE_R_IN   = { opacity: 1, x:   0 }
+const FADE_R_OUT  = { opacity: 0, x:  40 }
 
 const CONTAINER_VARIANTS = {
   hidden: {},
@@ -98,6 +99,11 @@ const ITEM_VARIANTS = {
   hidden: { opacity: 0, y: 30, scale: 0.95 },
   show:   { opacity: 1, y:  0, scale:  1, transition: { duration: 0.45, ease: 'easeOut' } },
 }
+
+// ─── Shared GPU hint style ────────────────────────────────────────────────────
+// Applied to every animated overlay so the browser composites on its own layer,
+// eliminating the "shutter" caused by the main thread blocking the GL thread.
+const GPU_LAYER = { willChange: 'transform, opacity', backfaceVisibility: 'hidden' }
 
 // ─── Adaptive DPR ─────────────────────────────────────────────────────────────
 function getDPR(isMobile) {
@@ -116,41 +122,55 @@ function Loader() {
   )
 }
 
-// ─── AccentLight — mutates color instead of remounting ───────────────────────
+// ─── AccentLight — mutates color in-place, never remounts ────────────────────
 function AccentLight({ accent }) {
-  const lightRef = useRef(null)
-  useEffect(() => {
-    if (lightRef.current) lightRef.current.color.set(accent)
-  }, [accent])
-  return <pointLight ref={lightRef} position={[-10, 5, 5]} intensity={0.4} />
+  const ref = useRef(null)
+  useEffect(() => { if (ref.current) { ref.current.color.set(accent); invalidate() } }, [accent])
+  return <pointLight ref={ref} position={[-10, 5, 5]} intensity={0.4} />
 }
 
 // ─── Truck ────────────────────────────────────────────────────────────────────
+// Key optimisation: frameloop="demand" + invalidate() means the GL context only
+// redraws when something actually moved. This removes constant GPU work on mobile
+// that was the root cause of the "shutter" (thermal throttle / frame drops).
 function Truck({ targetPose }) {
   const { scene } = useGLTF('/truck.glb')
-  const truckRef = useRef(null)
+  const truckRef  = useRef(null)
+  const movingRef = useRef(true) // dirty flag — true while animating
 
   const solidScene = useMemo(() => scene.clone(true), [scene])
   const wireScene  = useMemo(() => {
     const clone = scene.clone(true)
-    clone.traverse((child) => {
-      if (child.isMesh) child.material = WIRE_MAT
-    })
+    clone.traverse((child) => { if (child.isMesh) child.material = WIRE_MAT })
     return clone
   }, [scene])
 
+  // Whenever the pose target changes, mark as moving so useFrame runs draws
+  useEffect(() => { movingRef.current = true }, [targetPose])
+
   useFrame((_, delta) => {
     const p = truckRef.current
-    if (!p) return
+    if (!p || !movingRef.current) return
 
     const nx  = THREE.MathUtils.damp(p.position.x, targetPose.x,    3, delta)
     const nz  = THREE.MathUtils.damp(p.position.z, targetPose.z,    3, delta)
     const nry = THREE.MathUtils.damp(p.rotation.y, targetPose.rotY, 2, delta)
 
-    // Only write when change is meaningful — avoids continuous GPU uploads on mobile
-    if (Math.abs(nx  - p.position.x) > EPS) p.position.x = nx
-    if (Math.abs(nz  - p.position.z) > EPS) p.position.z = nz
-    if (Math.abs(nry - p.rotation.y) > EPS) p.rotation.y = nry
+    const dx  = Math.abs(nx  - p.position.x)
+    const dz  = Math.abs(nz  - p.position.z)
+    const dry = Math.abs(nry - p.rotation.y)
+
+    if (dx > EPS)  p.position.x = nx
+    if (dz > EPS)  p.position.z = nz
+    if (dry > EPS) p.rotation.y = nry
+
+    if (dx > EPS || dz > EPS || dry > EPS) {
+      // Still moving — request another frame
+      invalidate()
+    } else {
+      // Fully settled — stop requesting frames to save GPU
+      movingRef.current = false
+    }
   })
 
   return (
@@ -182,6 +202,7 @@ const SectionContent = memo(function SectionContent({ section, visible }) {
           exit={FADE_OUT}
           transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
           style={{
+            ...GPU_LAYER,
             position: 'absolute',
             left: 'clamp(16px, 5vw, 80px)',
             top: '15%',
@@ -215,6 +236,7 @@ const SectionContent = memo(function SectionContent({ section, visible }) {
             animate={{ scaleX: 1 }}
             transition={{ delay: 0.3, duration: 0.5 }}
             style={{
+              ...GPU_LAYER,
               height: '3px', width: '80px',
               background: section.accent,
               transformOrigin: 'left',
@@ -236,7 +258,7 @@ const SectionContent = memo(function SectionContent({ section, visible }) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.45 }}
-              style={{ marginTop: '32px', pointerEvents: 'auto' }}
+              style={{ ...GPU_LAYER, marginTop: '32px', pointerEvents: 'auto' }}
             >
               <a
                 href="tel:9500007779"
@@ -272,6 +294,7 @@ const ProductCard = memo(function ProductCard({ product, isMobile }) {
     <motion.div
       variants={ITEM_VARIANTS}
       style={{
+        ...GPU_LAYER,
         background: 'rgba(255,255,255,0.05)',
         borderRadius: 10,
         overflow: 'hidden',
@@ -318,6 +341,7 @@ const RightPanel = memo(function RightPanel({ activeSection, isMobile }) {
           initial={FADE_R_INIT} animate={FADE_R_IN} exit={FADE_R_OUT}
           transition={{ duration: 0.5 }}
           style={{
+            ...GPU_LAYER,
             position: 'absolute',
             ...(isMobile
               ? { bottom: 64, left: 0, right: 0, padding: '0 12px', zIndex: 20 }
@@ -344,6 +368,7 @@ const RightPanel = memo(function RightPanel({ activeSection, isMobile }) {
           initial={FADE_R_INIT} animate={FADE_R_IN} exit={FADE_R_OUT}
           transition={{ duration: 0.5 }}
           style={{
+            ...GPU_LAYER,
             position: 'absolute',
             ...(isMobile
               ? { bottom: 72, left: '5%', width: '90%', zIndex: 20 }
@@ -379,6 +404,7 @@ const RightPanel = memo(function RightPanel({ activeSection, isMobile }) {
           initial={FADE_R_INIT} animate={FADE_R_IN} exit={FADE_R_OUT}
           transition={{ duration: 0.5 }}
           style={{
+            ...GPU_LAYER,
             position: 'absolute',
             ...(isMobile
               ? { bottom: 72, left: '50%', transform: 'translateX(-50%)', width: '90%', zIndex: 20 }
@@ -488,11 +514,11 @@ const NavDot = memo(function NavDot({ section, active, onClick }) {
         animate={{
           width:  active ? 10 : 6,
           height: active ? 10 : 6,
-          background:  active ? section.accent : 'rgba(255,255,255,0.3)',
+          background: active ? section.accent : 'rgba(255,255,255,0.3)',
           boxShadow: active ? `0 0 8px ${section.accent}` : 'none',
         }}
         transition={{ duration: 0.3 }}
-        style={{ borderRadius: '50%' }}
+        style={{ borderRadius: '50%', ...GPU_LAYER }}
       />
     </button>
   )
@@ -504,13 +530,13 @@ export default function Scene() {
   const [transitioning,  setTransitioning]  = useState(false)
   const [isMobile,       setIsMobile]       = useState(false)
 
-  // Debounced resize check
+  // RAF-debounced resize — avoids layout thrash on mobile orientation change
   useEffect(() => {
     let raf
     const check = () => setIsMobile(window.innerWidth < 768)
     const debounced = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(check) }
     check()
-    window.addEventListener('resize', debounced)
+    window.addEventListener('resize', debounced, { passive: true })
     return () => { window.removeEventListener('resize', debounced); cancelAnimationFrame(raf) }
   }, [])
 
@@ -522,7 +548,7 @@ export default function Scene() {
 
   const currentSection = SECTIONS[activeSection]
   const accent = currentSection.accent
-  const dpr = useMemo(() => getDPR(isMobile), [isMobile])
+  const dpr    = useMemo(() => getDPR(isMobile), [isMobile])
 
   const goTo = useCallback((idx) => {
     if (isAnimatingRef.current) return
@@ -533,6 +559,9 @@ export default function Scene() {
     canAdvanceRef.current  = false
     wheelAccumRef.current  = 0
     if (holdTimerRef.current) clearTimeout(holdTimerRef.current)
+
+    // Kick the renderer so the truck starts moving immediately
+    invalidate()
 
     setTransitioning(true)
     setTimeout(() => {
@@ -546,7 +575,7 @@ export default function Scene() {
     }, 280)
   }, [])
 
-  // Initial hold
+  // Initial hold gate
   useEffect(() => {
     holdTimerRef.current = setTimeout(() => { canAdvanceRef.current = true }, HOLD_MS)
     return () => clearTimeout(holdTimerRef.current)
@@ -558,17 +587,14 @@ export default function Scene() {
       e.preventDefault()
       if (!canAdvanceRef.current) return
       wheelAccumRef.current += e.deltaY
-      if (wheelAccumRef.current > WHEEL_THRESHOLD) {
-        wheelAccumRef.current = 0; goTo(activeSectionRef.current + 1)
-      } else if (wheelAccumRef.current < -WHEEL_THRESHOLD) {
-        wheelAccumRef.current = 0; goTo(activeSectionRef.current - 1)
-      }
+      if      (wheelAccumRef.current >  WHEEL_THRESHOLD) { wheelAccumRef.current = 0; goTo(activeSectionRef.current + 1) }
+      else if (wheelAccumRef.current < -WHEEL_THRESHOLD) { wheelAccumRef.current = 0; goTo(activeSectionRef.current - 1) }
     }
     window.addEventListener('wheel', onWheel, { passive: false })
     return () => window.removeEventListener('wheel', onWheel)
   }, [goTo])
 
-  // Touch
+  // Touch — minimal overhead, no state
   useEffect(() => {
     let ty0 = 0
     const onTouchStart = (e) => { ty0 = e.touches[0].clientY }
@@ -597,7 +623,7 @@ export default function Scene() {
     return () => window.removeEventListener('keydown', onKey)
   }, [goTo])
 
-  // Stable per-section goTo callbacks
+  // Stable per-section callbacks — only recreated when goTo changes (essentially never)
   const navGoTo = useMemo(() => SECTIONS.map((_, i) => () => goTo(i)), [goTo])
 
   return (
@@ -611,7 +637,7 @@ export default function Scene() {
 
       <div style={{ width: '100%', height: '100svh', position: 'relative', overflow: 'hidden', background: '#0d0d0d' }}>
 
-        {/* Grid bg */}
+        {/* Grid bg — static, no JS paint */}
         <div
           aria-hidden="true"
           style={{
@@ -623,24 +649,29 @@ export default function Scene() {
           }}
         />
 
-        {/* Accent glow */}
+        {/* Accent glow — own compositing layer */}
         <motion.div
           aria-hidden="true"
           animate={{ background: `radial-gradient(ellipse, ${accent}22 0%, transparent 70%)` }}
           transition={{ duration: 0.8 }}
           style={{
+            ...GPU_LAYER,
             position: 'absolute', zIndex: 0, pointerEvents: 'none',
             bottom: '5%', left: '50%', transform: 'translateX(-50%)',
             width: '600px', height: '200px', filter: 'blur(30px)',
           }}
         />
 
-        {/* 3D Canvas */}
+        {/* 3-D Canvas
+            frameloop="demand" is the primary mobile fix:
+            the GL thread only wakes when invalidate() is called,
+            so it never fights with the main thread during JS-heavy transitions. */}
         <Canvas
           camera={{ position: [3, 3, 25], fov: 45 }}
-          style={{ position: 'absolute', inset: 0 }}
+          style={{ position: 'absolute', inset: 0, touchAction: 'none' }}
           dpr={dpr}
-          gl={{ antialias: !isMobile, powerPreference: 'high-performance' }}
+          frameloop="demand"
+          gl={{ antialias: !isMobile, powerPreference: 'high-performance', alpha: false }}
         >
           <Suspense fallback={<Loader />}>
             <Environment preset="city" />
@@ -661,12 +692,12 @@ export default function Scene() {
               animate={{ opacity: 0.15 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.25 }}
-              style={{ position: 'absolute', inset: 0, zIndex: 30, pointerEvents: 'none', background: accent }}
+              style={{ ...GPU_LAYER, position: 'absolute', inset: 0, zIndex: 30, pointerEvents: 'none', background: accent }}
             />
           )}
         </AnimatePresence>
 
-        {/* Section content */}
+        {/* Section content — only render the visible one to cut layout work */}
         {SECTIONS.map((section, i) => (
           <SectionContent key={section.id} section={section} visible={i === activeSection && !transitioning} />
         ))}
@@ -717,7 +748,7 @@ export default function Scene() {
           <motion.div
             animate={{ width: `${((activeSection + 1) / SECTIONS.length) * 100}%`, background: accent }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            style={{ height: '100%' }}
+            style={{ height: '100%', ...GPU_LAYER }}
           />
         </div>
 
@@ -751,7 +782,7 @@ export default function Scene() {
             key={activeSection}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            style={{ color: accent }}
+            style={{ color: accent, ...GPU_LAYER }}
           >
             0{activeSection + 1}
           </motion.span>
