@@ -18,11 +18,9 @@ export default function Home() {
       <Services />
       <Fleet />
       <WhyUs />
-      <Contact /> */}
+      <Contact />
+      <Footer /> */}
       <Truck/>
-      {/* <Claude/> */}
-      {/* <Back/> */}
-      {/* <Footer /> */}
       </>
   );
 }

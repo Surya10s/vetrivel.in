@@ -1,82 +1,84 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-// ── Replace with your actual domain ──────────────────────────────────────────
-const SITE_URL = "https://www.vetrivel.in";
-const SITE_NAME = "Vetrivel Building Materials";
+// ── FILL THESE IN ─────────────────────────────────────────────────────────────
+const SITE_URL       = "https://www.vetrivel.in";
+const SITE_NAME      = "Vetrivel Building Materials";
+const PHONE          = "+91-9500007779";              // ← FILL THIS
+const EMAIL          = "kandansuryamass@gmail.com";            // ← FILL THIS
+const STREET         = "Pillaiyar Koil St, Ishwarya Nagar, Muvendar Nagar, Anna Nagar,r"; // ← FILL THIS
+const POSTAL_CODE    = "600040";                      // ← FILL THIS
+const LAT            = 13.0827;                       // ← FILL THIS (exact coords)
+const LNG            = 80.2707;                       // ← FILL THIS (exact coords)
+const GSC_CODE       = "YOUR_SEARCH_CONSOLE_CODE";    // ← FILL THIS (from Google Search Console)
+const FB_URL         = "https://www.facebook.com/vetrivel";   // ← FILL THIS
+const IG_URL         = "https://www.instagram.com/vetrivel";  // ← FILL THIS
+const GBP_URL        = "https://g.page/vetrivel";             // ← FILL THIS
 
 // ── JSON-LD Structured Data ───────────────────────────────────────────────────
-// Helps Google show rich results (name, address, hours, ratings, services)
 const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
-    // 1. Local Business — shows in Google Maps / local pack
+    // 1. LocalBusiness — drives the Google Maps / local pack appearance
     {
-      "@type": "LocalBusiness",
+      "@type": ["LocalBusiness", "Store"],
       "@id": `${SITE_URL}/#business`,
       name: SITE_NAME,
-      alternateName: ["Vetrivel Sand Supplier", "Vetrivel M Sand Chennai"],
-      description:
-        "Chennai's trusted supplier of M Sand, White M Sand, P Sand, Gravel, 20mm Stone, and construction aggregates. 26+ years experience, certified weighing, same-day delivery across Chennai.",
-      url: SITE_URL,
-      telephone: "+91-XXXXXXXXXX", // ← replace with real number
-      email: "info@vetrivelbuildingmaterials.com", // ← replace
-      priceRange: "₹₹",
-      image: `${SITE_URL}/og-image.jpg`,
-      logo: `${SITE_URL}/logo.png`,
-      foundingDate: "1998",
-      areaServed: [
-        "Chennai",
-        "Tambaram",
-        "Velachery",
-        "Porur",
-        "Ambattur",
-        "Avadi",
-        "Sholinganallur",
-        "Perambur",
-        "Chromepet",
-        "Pallavaram",
-        "Anna Nagar",
-        "T. Nagar",
-        "Adyar",
-        "Guindy",
-        "Medavakkam",
-        "Perungudi",
+      alternateName: [
+        "Vetrivel Sand Supplier",
+        "Vetrivel M Sand Chennai",
+        "Vetrivel Building Materials Chennai",
       ],
+      description:
+        "Chennai's trusted building material supplier since 1998. Premium M Sand, White M Sand, P Sand, Gravel, 20mm & 12mm Aggregates, Quarry Dust. Same-day delivery 5–50 tons across Chennai. PWD-certified, IS 383 compliant, certified weighbridge.",
+      url: SITE_URL,
+      telephone: PHONE,
+      email: EMAIL,
+      priceRange: "₹₹",
+      currenciesAccepted: "INR",
+      paymentAccepted: "Cash, Bank Transfer, UPI, Cheque",
+      image: `${SITE_URL}/og-image.jpg`,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}/logo.png`,
+        width: 400,
+        height: 400,
+      },
+      foundingDate: "1998",
+      numberOfEmployees: { "@type": "QuantitativeValue", value: "20" },
+
+      // All areas served — critical for local SEO
+      areaServed: [
+        { "@type": "City", name: "Chennai", sameAs: "https://www.wikidata.org/wiki/Q1352" },
+        "Tambaram", "Velachery", "Porur", "Ambattur", "Avadi",
+        "Sholinganallur", "Perambur", "Chromepet", "Pallavaram",
+        "Anna Nagar", "T. Nagar", "Adyar", "Guindy", "Medavakkam",
+        "Perungudi", "OMR", "ECR", "Nungambakkam", "Kodambakkam",
+        "Chengalpattu", "Kanchipuram",
+      ],
+
       address: {
         "@type": "PostalAddress",
-        streetAddress: "Your Street Address", // ← replace
+        streetAddress: STREET,
         addressLocality: "Chennai",
         addressRegion: "Tamil Nadu",
-        postalCode: "600001", // ← replace
+        postalCode: POSTAL_CODE,
         addressCountry: "IN",
       },
+
       geo: {
         "@type": "GeoCoordinates",
-        latitude: 13.0827, // ← replace with exact coords
-        longitude: 80.2707,
+        latitude: LAT,
+        longitude: LNG,
       },
+
       openingHoursSpecification: [
         {
           "@type": "OpeningHoursSpecification",
-          dayOfWeek: [
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-          ],
+          dayOfWeek: ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
           opens: "07:00",
           closes: "19:00",
         },
@@ -87,180 +89,224 @@ const jsonLd = {
           closes: "14:00",
         },
       ],
+
+      // Aggregate rating — update this once you have reviews on Google
+      // aggregateRating: {
+      //   "@type": "AggregateRating",
+      //   ratingValue: "4.8",
+      //   reviewCount: "47",
+      //   bestRating: "5",
+      // },
+
       hasOfferCatalog: {
         "@type": "OfferCatalog",
-        name: "Building Materials",
+        name: "Building Materials & Construction Aggregates",
         itemListElement: [
           {
             "@type": "Offer",
             itemOffered: {
               "@type": "Product",
-              name: "M Sand (Manufactured Sand)",
+              name: "M Sand (Manufactured Sand) Chennai",
               description:
-                "High-quality manufactured sand ideal for concrete and plastering works. Meets IS 383 standards.",
+                "IS 383-compliant manufactured sand for RCC and concrete work. Cubical particles, washed and graded. Available in 10T, 20T, and 50T lorry loads.",
+              brand: { "@type": "Brand", name: SITE_NAME },
+              material: "Crushed Granite",
+              url: `${SITE_URL}/m-sand-chennai`,
             },
           },
           {
             "@type": "Offer",
             itemOffered: {
               "@type": "Product",
-              name: "White M Sand",
+              name: "White M Sand Chennai",
               description:
-                "Premium white manufactured sand for fine plastering and wall finishing.",
+                "Premium white manufactured sand for fine plastering and wall finishing. Low fines content for superior workability.",
+              url: `${SITE_URL}/white-m-sand-chennai`,
             },
           },
           {
             "@type": "Offer",
             itemOffered: {
               "@type": "Product",
-              name: "P Sand (Plastering Sand)",
+              name: "P Sand (Plastering Sand) Chennai",
               description:
-                "Fine-graded plastering sand for smooth wall finishes and tile work.",
+                "Fine-graded 150 micron to 3.55mm plastering sand. Ideal for smooth wall finish, tile laying, and brickwork. Mix ratio 1:4 (internal), 1:6 (external).",
+              url: `${SITE_URL}/p-sand-chennai`,
             },
           },
           {
             "@type": "Offer",
             itemOffered: {
               "@type": "Product",
-              name: "Gravel & Aggregates",
+              name: "20mm Gravel / Blue Metal Chennai",
               description:
-                "20mm, 12mm gravel and coarse aggregates for RCC and foundation work.",
+                "Graded 20mm coarse aggregate for RCC, foundation, and road base work.",
+              url: `${SITE_URL}/gravel-aggregate-chennai`,
             },
           },
           {
             "@type": "Offer",
             itemOffered: {
               "@type": "Product",
-              name: "Stone Dust / Quarry Dust",
+              name: "Quarry Dust / Stone Dust Chennai",
               description:
-                "Fine quarry dust used as a sand substitute and for paving applications.",
+                "Fine quarry dust for paving, sub-base compaction, and sand substitute applications.",
+              url: `${SITE_URL}/quarry-dust-chennai`,
             },
           },
         ],
       },
-      sameAs: [
-        "https://www.facebook.com/vetrivel", // ← replace with real URLs
-        "https://www.instagram.com/vetrivel",
-        "https://g.page/vetrivel", // Google Business Profile
-      ],
+
+      sameAs: [FB_URL, IG_URL, GBP_URL],
     },
 
-    // 2. WebSite — enables Google Sitelinks Search Box
+    // 2. WebSite — enables Sitelinks search box
     {
       "@type": "WebSite",
       "@id": `${SITE_URL}/#website`,
       url: SITE_URL,
       name: SITE_NAME,
       description:
-        "M Sand, P Sand, Gravel and Aggregate supplier in Chennai with 26 years of experience.",
+        "M Sand, P Sand, Gravel, and Aggregate supplier in Chennai. 26+ years of experience. Same-day delivery.",
+      inLanguage: ["en-IN", "ta-IN"],
       potentialAction: {
         "@type": "SearchAction",
         target: `${SITE_URL}/search?q={search_term_string}`,
         "query-input": "required name=search_term_string",
       },
     },
+
+    // 3. BreadcrumbList — helps Google show breadcrumbs in results
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+        { "@type": "ListItem", position: 2, name: "M Sand Chennai", item: `${SITE_URL}/m-sand-chennai` },
+        { "@type": "ListItem", position: 3, name: "P Sand Chennai", item: `${SITE_URL}/p-sand-chennai` },
+        { "@type": "ListItem", position: 4, name: "Price List", item: `${SITE_URL}/price` },
+      ],
+    },
+
+    // 4. FAQPage — shows expandable Q&As directly in Google results
+    {
+      "@type": "FAQPage",
+      mainEntity: [
+        {
+          "@type": "Question",
+          name: "What is the price of M Sand in Chennai?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "M Sand price in Chennai ranges from ₹950 to ₹1,400 per tonne depending on lorry size, location, and quantity. Contact Vetrivel Building Materials for today's best price: call " + PHONE + " or visit our price page.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Do you deliver M Sand and P Sand same day in Chennai?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Yes. Vetrivel Building Materials offers same-day delivery of M Sand, P Sand, and Gravel across Chennai and suburbs including Tambaram, Velachery, Porur, Ambattur, Anna Nagar, and more. Order before 12 PM for same-day dispatch.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Is your M Sand PWD certified?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Yes. All our M Sand and P Sand meet Tamil Nadu PWD specifications and IS 383 standards. We provide test certificates on request.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "What is the minimum order quantity for M Sand delivery?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Minimum order is 5 tonnes (small lorry). We supply up to 50 tonnes per load. Both single and bulk orders are accepted.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "What areas in Chennai do you supply M Sand to?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "We deliver M Sand and P Sand to all Chennai areas including Tambaram, Velachery, Porur, Anna Nagar, T. Nagar, Adyar, Guindy, Ambattur, Chromepet, Pallavaram, Sholinganallur, Medavakkam, Perambur, OMR, and ECR.",
+          },
+        },
+      ],
+    },
   ],
 };
 
-// ── Next.js Metadata Export ───────────────────────────────────────────────────
+// ── Next.js Metadata ──────────────────────────────────────────────────────────
 export const metadata = {
-  // ── Titles ─────────────────────────────────────────────────────────────────
   title: {
-    // Shown on homepage
-    default: "Vetrivel Building Materials Chennai | M Sand, P Sand, Gravel Supplier",
-    // Other pages use: "Page Name | Vetrivel Building Materials"
+    default: "Vetrivel Building Materials Chennai | M Sand, P Sand & Gravel Supplier Since 1998",
     template: "%s | Vetrivel Building Materials Chennai",
   },
 
-  // ── Description (keep 150-160 chars) ───────────────────────────────────────
   description:
-    "Vetrivel – Chennai's trusted building material supplier since 1998. Buy M Sand, White M Sand, P Sand, Gravel & Aggregates. Same-day delivery 5–50 tons. Certified weighing. Call now.",
+    "Chennai's trusted M Sand, P Sand & Gravel supplier since 1998. PWD-certified, IS 383 compliant. Same-day delivery 5–50 tons across all Chennai suburbs. Competitive prices, certified weighing. Call now.",
 
-  // ── Canonical URL ──────────────────────────────────────────────────────────
   alternates: {
     canonical: SITE_URL,
     languages: {
       "en-IN": SITE_URL,
-      "ta-IN": `${SITE_URL}/ta`, // if you have a Tamil version
+      "ta-IN": `${SITE_URL}/ta`,
     },
   },
 
-  // ── Keywords (secondary signal, still helps) ───────────────────────────────
   keywords: [
     // Brand
-    "Vetrivel",
-    "Vetrivel building materials",
-    "Vetrivel sand supplier Chennai",
-    "Vetrivel M sand Chennai",
-    // Core products
-    "M Sand Chennai",
-    "manufactured sand Chennai",
-    "white M sand Chennai",
-    "P Sand Chennai",
-    "plastering sand Chennai",
-    "gravel supplier Chennai",
-    "aggregates Chennai",
-    "20mm aggregate Chennai",
-    "12mm aggregate Chennai",
-    "quarry dust Chennai",
-    "stone dust Chennai",
-    "river sand substitute Chennai",
-    // Intent-based
-    "buy M sand Chennai",
-    "M sand price Chennai",
-    "P sand price Chennai",
-    "sand delivery Chennai",
-    "building materials delivery Chennai",
-    "bulk sand supplier Chennai",
+    "Vetrivel", "Vetrivel building materials", "Vetrivel sand supplier Chennai",
+    // Core products + intent
+    "M Sand Chennai", "M Sand price Chennai", "buy M Sand Chennai",
+    "manufactured sand Chennai", "white M sand Chennai",
+    "P Sand Chennai", "plastering sand Chennai", "P sand price Chennai",
+    "gravel supplier Chennai", "blue metal Chennai",
+    "20mm aggregate Chennai", "12mm aggregate Chennai",
+    "quarry dust Chennai", "stone dust Chennai",
+    // Delivery / action
+    "M sand delivery Chennai", "same day sand delivery Chennai",
+    "bulk sand supplier Chennai", "sand lorry Chennai",
     "construction material supplier Chennai",
-    "RCC aggregate supplier Chennai",
-    // Area-based (long tail)
-    "M sand Tambaram",
-    "M sand Velachery",
-    "M sand Porur",
-    "M sand Anna Nagar",
-    "sand supplier Ambattur",
-    "gravel Chromepet",
-    "building materials Sholinganallur",
-    // Tamil language keywords (helps Tamil searches)
-    "கட்டுமான பொருட்கள் சென்னை",
-    "மணல் சப்ளையர் சென்னை",
+    // Area long-tail (separate pages will target these)
+    "M sand Tambaram", "M sand Velachery", "M sand Porur",
+    "M sand Anna Nagar", "M sand Ambattur", "M sand Chromepet",
+    "M sand Sholinganallur", "M sand OMR", "M sand Adyar",
+    // Tamil
+    "கட்டுமான பொருட்கள் சென்னை", "மணல் சப்ளையர் சென்னை", "எம் சாண்ட் சென்னை",
   ],
 
-  // ── Authors / Publisher ────────────────────────────────────────────────────
   authors: [{ name: SITE_NAME, url: SITE_URL }],
   creator: SITE_NAME,
   publisher: SITE_NAME,
 
-  // ── Open Graph (Facebook, WhatsApp, LinkedIn previews) ────────────────────
   openGraph: {
-    title: "Vetrivel Building Materials | M Sand, P Sand & Gravel – Chennai",
+    title: "Vetrivel Building Materials | M Sand, P Sand & Gravel – Chennai Since 1998",
     description:
-      "26+ years supplying M Sand, P Sand, Gravel & Aggregates across Chennai. Same-day delivery, certified weighing, transparent pricing. Order 5–50 tons today.",
+      "26+ years supplying M Sand, P Sand, Gravel & Aggregates across all Chennai suburbs. Same-day delivery, PWD-certified, competitive pricing. Order 5–50 tons today.",
     url: SITE_URL,
     siteName: SITE_NAME,
     locale: "en_IN",
     type: "website",
     images: [
       {
-        url: `${SITE_URL}/og-image.jpg`, // ← create a 1200×630 image
+        url: `${SITE_URL}/og-image.jpg`,
         width: 1200,
         height: 630,
-        alt: "Vetrivel Building Materials – M Sand and Gravel Supplier Chennai",
+        alt: "Vetrivel Building Materials – M Sand and P Sand Supplier in Chennai",
+        type: "image/jpeg",
       },
     ],
   },
 
-  // ── Twitter Card ───────────────────────────────────────────────────────────
   twitter: {
     card: "summary_large_image",
-    title: "Vetrivel Building Materials | Chennai's #1 Sand & Gravel Supplier",
+    title: "Vetrivel Building Materials | Chennai's Trusted Sand & Gravel Supplier",
     description:
-      "Premium M Sand, P Sand, Gravel delivered across Chennai. 26 years experience, own fleet, same-day dispatch.",
+      "Premium M Sand, P Sand, Gravel delivered across Chennai. 26 years experience, own fleet, same-day dispatch. PWD certified.",
     images: [`${SITE_URL}/og-image.jpg`],
   },
 
-  // ── Robots ─────────────────────────────────────────────────────────────────
   robots: {
     index: true,
     follow: true,
@@ -273,30 +319,30 @@ export const metadata = {
     },
   },
 
-  // ── Verification (add your codes from Search Console / Bing) ──────────────
   verification: {
-    google: "YOUR_GOOGLE_SEARCH_CONSOLE_CODE", // ← replace
-    // bing: "YOUR_BING_CODE",
+    google: GSC_CODE,
   },
 
-  // ── App / Icon Metadata ────────────────────────────────────────────────────
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png",
+    icon: [
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
 
-  // ── App metadata ───────────────────────────────────────────────────────────
+  manifest: "/site.webmanifest",
   applicationName: SITE_NAME,
   category: "Construction & Building Materials",
-  classification: "Building Material Supplier",
 
-  // ── Geo meta (used by some local search engines) ──────────────────────────
   other: {
     "geo.region": "IN-TN",
-    "geo.placename": "Chennai",
-    "geo.position": "13.0827;80.2707", // ← update with your coords
-    ICBM: "13.0827, 80.2707",
+    "geo.placename": "Chennai, Tamil Nadu",
+    "geo.position": `${LAT};${LNG}`,
+    ICBM: `${LAT}, ${LNG}`,
+    // WhatsApp / Click-to-call
+    "format-detection": "telephone=yes",
   },
 };
 
@@ -308,19 +354,12 @@ export default function RootLayout({ children }) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        {/* JSON-LD Structured Data — injected directly for reliability */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-
-        {/* Preconnect to speed up Google Fonts */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
