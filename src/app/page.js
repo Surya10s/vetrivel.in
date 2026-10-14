@@ -10,17 +10,21 @@ import Services from "./components/Services";
 import Truck from "./components/Truck"
 import Back from "./components/back"
 import Claude from "./components/claude"
+import Gallery from "./components/gallery";
+import Testimonials from "./components/testimonial";
 export default function Home() {
   return (
     <>
-      {/* <Nav />
+      <Nav />
       <Hero />
       <Services />
       <Fleet />
       <WhyUs />
+      <Gallery/>
+      <Testimonials/>
       <Contact />
-      <Footer /> */}
-      <Truck/>
+      <Footer />
+      {/* <Truck/> */}
       </>
   );
 }
