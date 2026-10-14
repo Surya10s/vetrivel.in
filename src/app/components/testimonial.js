@@ -214,7 +214,7 @@ export default function Testimonials() {
                     ))}
                 </ul>
 
-                <div className="tm-footer">
+                {/* <div className="tm-footer">
                     <dl className="tm-stats">
                         {summary.map((s) => (
                             <div key={s.label}>
@@ -239,7 +239,7 @@ export default function Testimonials() {
                             Order on WhatsApp
                         </a>
                     </div>
-                </div>
+                </div> */}
             </div>
         </section>
     )
