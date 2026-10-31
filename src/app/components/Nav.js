@@ -90,8 +90,8 @@ export default function Nav() {
         /* Brand */
         .vbrand { display: flex; align-items: center; gap: 12px; text-decoration: none; flex-shrink: 0; }
         .logo-wrap {
-  width: 58px;
-  height: 58px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
@@ -223,7 +223,7 @@ export default function Nav() {
           <div className="logo-wrap">
             <img src="/logo1.jpg" alt="" />
           </div>
-          <span>Vetrivel</span>
+          {/* <span style={{color:"white"}}>Vetrivel</span> */}
         </a>
 
         <ul className="vlinks">
