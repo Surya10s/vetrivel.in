@@ -1,245 +1,285 @@
 'use client'
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+
+const LINKS = [
+  { label: "About", id: "about" },
+  { label: "Materials", id: "materials" },
+  { label: "Fleet", id: "fleet" },
+  { label: "Why us", id: "why-us" },
+  { label: "Contact", id: "contact" },
+]
 
 export default function Nav() {
-  const C = {
-    bg      : "#000000",
-    white   : "#FFFFFF",
-    offwhite: "#F0F0F0",
-    muted   : "rgba(255,255,255,0.42)",
-    border  : "rgba(255,255,255,0.10)",
-    hover   : "rgba(255,255,255,0.06)",
-  };
+  const [scrolled, setScrolled] = useState(false)
+  const [open, setOpen] = useState(false)
+  const [active, setActive] = useState("")
+  const progressRef = useRef(null)
 
-  const [scrolled, setScrolled] = useState(false);
-  const [open, setOpen] = useState(false);
-
+  // Scrolled state + page progress line
   useEffect(() => {
-    const h = () => setScrolled(window.scrollY > 30);
-    window.addEventListener("scroll", h);
-    return () => window.removeEventListener("scroll", h);
-  }, []);
+    const onScroll = () => {
+      const y = window.scrollY
+      setScrolled(y > 24)
+      const max = document.documentElement.scrollHeight - window.innerHeight
+      if (progressRef.current) {
+        progressRef.current.style.transform = `scaleX(${max > 0 ? Math.min(y / max, 1) : 0})`
+      }
+    }
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
+  // Highlight the link for the section currently in view
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [open]);
+    const els = LINKS.map(l => document.getElementById(l.id)).filter(Boolean)
+    if (!els.length) return
+    const io = new IntersectionObserver(
+      entries => entries.forEach(e => e.isIntersecting && setActive(e.target.id)),
+      { rootMargin: "-40% 0px -55% 0px" }
+    )
+    els.forEach(el => io.observe(el))
+    return () => io.disconnect()
+  }, [])
 
-  const links = ["About", "materials", "Fleet", "why us", "Contact"];
+  // Lock scroll + close on Escape while the mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : ""
+    const onKey = e => e.key === "Escape" && setOpen(false)
+    window.addEventListener("keydown", onKey)
+    return () => {
+      document.body.style.overflow = ""
+      window.removeEventListener("keydown", onKey)
+    }
+  }, [open])
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
 
-        .nav-link {
-          font-family: 'DM Sans', sans-serif;
-          font-weight: 500;
-          font-size: 13px;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: rgba(255,255,255,0.52);
-          text-decoration: none;
-          position: relative;
-          padding: 4px 0;
-          transition: color 0.2s;
-        }
-        .nav-link::after {
-          content: '';
-          position: absolute;
-          bottom: -1px;
-          left: 0;
-          width: 0;
-          height: 1px;
-          background: #fff;
-          transition: width 0.3s cubic-bezier(.22,1,.36,1);
-        }
-        .nav-link:hover { color: #fff; }
-        .nav-link:hover::after { width: 100%; }
+        html { scroll-padding-top: 72px; scroll-behavior: smooth; }
+        @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
-        .quote-btn {
-          font-family: 'DM Sans', sans-serif;
-          font-weight: 600;
-          font-size: 12px;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: #000;
-          background: #fff;
-          padding: 10px 26px;
-          border-radius: 2px;
-          text-decoration: none;
-          transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-          border: 1px solid #fff;
+        .vnav {
+          --ink: #fff;
+          --ink-dim: rgba(255,255,255,0.58);
+          --line: rgba(255,255,255,0.12);
+          position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+          height: 72px;
+          padding: 0 clamp(20px, 5vw, 64px);
+          display: flex; align-items: center; justify-content: space-between; gap: 32px;
+          transition: height .35s cubic-bezier(.22,1,.36,1), background .35s, border-color .35s, backdrop-filter .35s;
+          background: linear-gradient(to bottom, rgba(0,0,0,.75), rgba(0,0,0,0));
+          border-bottom: 1px solid transparent;
         }
-        .quote-btn:hover {
-          background: transparent;
-          color: #fff;
-          box-shadow: inset 0 0 0 1px #fff;
+        .vnav.is-scrolled {
+          height: 60px;
+          background: rgba(0,0,0,.82);
+          backdrop-filter: blur(16px) saturate(140%);
+          -webkit-backdrop-filter: blur(16px) saturate(140%);
+          border-bottom-color: var(--line);
+        }
+        .vnav.is-open { background: transparent; border-bottom-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
+
+        .vnav a, .vnav button { -webkit-tap-highlight-color: transparent; }
+        .vnav :focus-visible, .vmenu :focus-visible {
+          outline: 2px solid #fff; outline-offset: 4px; border-radius: 2px;
         }
 
-        .ham-line {
-          display: block;
-          width: 22px;
-          height: 1.5px;
-          background: #fff;
-          transition: transform 0.35s cubic-bezier(.22,1,.36,1), opacity 0.2s;
-          transform-origin: center;
+        /* Brand */
+        .vbrand { display: flex; align-items: center; gap: 12px; text-decoration: none; flex-shrink: 0; }
+        .logo-wrap {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.2);
+  transition: width .35s, height .35s;
+}
+.logo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.is-scrolled .logo-wrap {
+  width: 44px;
+  height: 44px;
+}
+        /* Desktop links */
+        .vlinks { display: flex; align-items: center; gap: clamp(20px, 3vw, 40px); margin: 0 0 0 auto; padding: 0; list-style: none; }
+        .vlink {
+          font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 15px;
+          color: var(--ink-dim); text-decoration: none; position: relative;
+          padding: 8px 0; transition: color .2s;
+        }
+        .vlink::after {
+          content: ''; position: absolute; left: 0; right: 0; bottom: 2px; height: 2px;
+          background: var(--ink); transform: scaleX(0); transform-origin: left;
+          transition: transform .35s cubic-bezier(.22,1,.36,1);
+        }
+        .vlink:hover { color: var(--ink); }
+        .vlink:hover::after, .vlink[aria-current="true"]::after { transform: scaleX(1); }
+        .vlink[aria-current="true"] { color: var(--ink); }
+
+        /* Quote button */
+        .vcta {
+          font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 14px;
+          color: #000; background: #fff; text-decoration: none;
+          padding: 11px 22px; border-radius: 999px; border: 1px solid #fff;
+          transition: background .2s, color .2s, transform .2s; white-space: nowrap;
+        }
+        .vcta:hover { background: transparent; color: #fff; }
+        .vcta:active { transform: scale(.97); }
+
+        /* Hamburger */
+        .vham {
+          display: none; width: 44px; height: 44px; margin-right: -10px;
+          background: none; border: none; cursor: pointer; position: relative; z-index: 202;
+        }
+        .vham i {
+          position: absolute; left: 11px; right: 11px; height: 2px; background: #fff; border-radius: 2px;
+          transition: transform .4s cubic-bezier(.22,1,.36,1), top .4s cubic-bezier(.22,1,.36,1);
+        }
+        .vham i:nth-child(1) { top: 16px; }
+        .vham i:nth-child(2) { top: 26px; }
+        .vham[aria-expanded="true"] i:nth-child(1) { top: 21px; transform: rotate(45deg); }
+        .vham[aria-expanded="true"] i:nth-child(2) { top: 21px; transform: rotate(-45deg); }
+
+        /* Mobile menu */
+        .vmenu {
+          position: fixed; inset: 0; z-index: 198; background: #000;
+          display: flex; flex-direction: column; justify-content: center;
+          padding: 96px clamp(24px, 8vw, 64px) 40px;
+          opacity: 0; visibility: hidden; pointer-events: none;
+          transition: opacity .4s cubic-bezier(.22,1,.36,1), visibility 0s .4s;
+        }
+        .vmenu.is-open { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .4s cubic-bezier(.22,1,.36,1), visibility 0s; }
+        .vmenu-grid {
+          position: absolute; inset: 0; pointer-events: none;
+          background-image:
+            linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+          background-size: 56px 56px;
+          -webkit-mask-image: radial-gradient(ellipse at 30% 40%, #000 20%, transparent 75%);
+                  mask-image: radial-gradient(ellipse at 30% 40%, #000 20%, transparent 75%);
+        }
+        .vmenu ul { position: relative; list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+        .vmenu li {
+          border-bottom: 1px solid var(--line, rgba(255,255,255,.12));
+          opacity: 0; transform: translateY(14px);
+          transition: opacity .5s, transform .5s cubic-bezier(.22,1,.36,1);
+        }
+        .vmenu.is-open li { opacity: 1; transform: none; }
+        .vmlink {
+          display: flex; align-items: center; justify-content: space-between;
+          font-family: 'Syne', sans-serif; font-weight: 700;
+          font-size: clamp(30px, 8.5vw, 48px); letter-spacing: -0.02em; line-height: 1;
+          color: rgba(255,255,255,.55); text-decoration: none; padding: 20px 0;
+          transition: color .2s, padding-left .3s cubic-bezier(.22,1,.36,1);
+        }
+        .vmlink:hover, .vmlink[aria-current="true"] { color: #fff; padding-left: 8px; }
+        .vmlink .dot { width: 8px; height: 8px; border-radius: 50%; background: #fff; opacity: 0; transition: opacity .2s; }
+        .vmlink[aria-current="true"] .dot { opacity: 1; }
+
+        .vmenu-foot {
+          position: relative; margin-top: 36px;
+          opacity: 0; transition: opacity .5s .45s;
+        }
+        .vmenu.is-open .vmenu-foot { opacity: 1; }
+        .vmenu-foot .vcta { display: inline-block; font-size: 15px; padding: 15px 32px; }
+
+        .vmark {
+          position: absolute; right: -2vw; bottom: -2vw; pointer-events: none; user-select: none;
+          font-family: 'Syne', sans-serif; font-weight: 800; letter-spacing: -0.05em; line-height: .8;
+          font-size: clamp(110px, 32vw, 260px); color: rgba(255,255,255,.035);
         }
 
-        .mobile-link {
-          font-family: 'Syne', sans-serif;
-          font-weight: 700;
-          font-size: clamp(32px, 8vw, 52px);
-          color: rgba(255,255,255,0.15);
-          text-decoration: none;
-          letter-spacing: -0.02em;
-          transition: color 0.2s;
-          line-height: 1.1;
+        /* Progress line */
+        .vprog {
+          position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: #fff;
+          transform: scaleX(0); transform-origin: left; opacity: 0; transition: opacity .3s;
         }
-        .mobile-link:hover { color: #fff; }
+        .is-scrolled .vprog { opacity: .9; }
 
-        .mobile-index {
-          font-family: 'DM Sans', sans-serif;
-          font-size: 10px;
-          font-weight: 500;
-          color: rgba(255,255,255,0.25);
-          letter-spacing: 0.1em;
-          margin-right: 14px;
-          margin-top: 6px;
-          align-self: flex-start;
+        @media (max-width: 860px) {
+          .vlinks, .vnav .vcta { display: none; }
+          .vham { display: block; }
         }
-
-        @media(max-width:768px){ .dnav{ display:none!important } .ham{ display:flex!important } }
+        @media (prefers-reduced-motion: reduce) {
+          .vnav, .vmenu, .vmenu li, .vmlink, .vham i, .vlink::after { transition-duration: .01ms !important; }
+        }
       `}</style>
 
-      <nav style={{
-        position: "relative", top: 0, left: 0, right: 0, zIndex: 200,
-        height: 64,
-        padding: "0 5vw",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        background:  "rgba(0,0,0,0.92)",
-          
-        borderBottom: scrolled
-          ? "1px solid rgba(255,255,255,0.07)"
-          : "1px solid transparent",
-        backdropFilter: scrolled ? "blur(18px)" : "none",
-        transition: "background 0.5s, border-color 0.5s, backdrop-filter 0.5s",
-      }}>
-
-        {/* ── Logo ── */}
-        <a href="#" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{
-            width: 32, height: 32,
-            border: "1.5px solid rgba(255,255,255,0.7)",
-            borderRadius: 2,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <span style={{
-              fontFamily: "'Syne', sans-serif",
-              fontWeight: 800, fontSize: 15, color: "#fff",
-              lineHeight: 1,
-            }}>v</span>
+      <nav className={`vnav${scrolled ? " is-scrolled" : ""}${open ? " is-open" : ""}`} aria-label="Primary">
+        <a
+          href="#"
+          className="vbrand"
+          aria-label="Vetrivel home"
+          onClick={() => setOpen(false)}
+        >
+          <div className="logo-wrap">
+            <img src="/logo1.jpg" alt="" />
           </div>
-          <span style={{
-            fontFamily: "'Syne', sans-serif",
-            fontWeight: 700, fontSize: 17,
-            color: "#fff", letterSpacing: "-0.02em",
-          }}>vetrivel</span>
+          <span>Vetrivel</span>
         </a>
 
+        <ul className="vlinks">
+          {LINKS.map(l => (
+            <li key={l.id}>
+              <a
+                href={`#${l.id}`}
+                className="vlink"
+                aria-current={active === l.id ? "true" : undefined}
+              >
+                {l.label}
+              </a>
+            </li>
+          ))}
+        </ul>
 
-        {/* ── Hamburger ── */}
+        <a href="#contact" className="vcta">Get a quote</a>
+
         <button
-          className="ham"
+          className="vham"
           onClick={() => setOpen(o => !o)}
-          style={{
-            display: "none",
-            flexDirection: "column", gap: 5,
-            background: "none", border: "none",
-            cursor: "pointer", padding: 6, zIndex: 202,
-          }}
-          aria-label="Toggle menu"
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
+          aria-controls="mobile-menu"
         >
-          <span className="ham-line" style={open ? { transform: "translateY(6.5px) rotate(45deg)" } : {}} />
-          <span className="ham-line" style={open ? { opacity: 0, transform: "scaleX(0)" } : {}} />
-          <span className="ham-line" style={open ? { transform: "translateY(-6.5px) rotate(-45deg)" } : {}} />
+          <i /><i />
         </button>
+
+        <div className="vprog" ref={progressRef} aria-hidden="true" />
       </nav>
 
-      {/* ── Mobile Fullscreen Menu ── */}
-      <div style={{
-        position: "fixed", inset: 0, zIndex: 198,
-        background: "#000",
-        display: "flex", flexDirection: "column",
-        justifyContent: "center",
-        padding: "0 8vw",
-        pointerEvents: open ? "all" : "none",
-        opacity: open ? 1 : 0,
-        transition: "opacity 0.4s cubic-bezier(.22,1,.36,1)",
-      }}>
-        {/* Grid lines decoration */}
-        <div style={{
-          position: "absolute", inset: 0,
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
-          pointerEvents: "none",
-        }} />
-
-        <div style={{ position: "relative", zIndex: 2 }}>
-          <span style={{
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: 10, fontWeight: 600,
-            letterSpacing: "0.2em", textTransform: "uppercase",
-            color: "rgba(255,255,255,0.2)",
-            display: "block", marginBottom: 40,
-          }}>Navigation</span>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {links.map((l, i) => (
-              <div key={l} style={{
-                display: "flex", alignItems: "baseline",
-                opacity: open ? 1 : 0,
-                transform: open ? "translateX(0)" : "translateX(-20px)",
-                transition: `opacity 0.5s ${0.1 + i * 0.07}s, transform 0.5s ${0.1 + i * 0.07}s cubic-bezier(.22,1,.36,1)`,
-              }}>
-                <span className="mobile-index">0{i + 1}</span>
-                <a
-                  href={`#${l.toLowerCase()}`}
-                  className="mobile-link"
-                  onClick={() => setOpen(false)}
-                >{l}</a>
-              </div>
-            ))}
-          </div>
-
-          <div style={{
-            marginTop: 52,
-            opacity: open ? 1 : 0,
-            transform: open ? "translateY(0)" : "translateY(10px)",
-            transition: `opacity 0.5s 0.5s, transform 0.5s 0.5s`,
-          }}>
-            <a href="#contact" onClick={() => setOpen(false)} style={{
-              display: "inline-block",
-              fontFamily: "'DM Sans', sans-serif",
-              fontWeight: 600, fontSize: 12,
-              letterSpacing: "0.1em", textTransform: "uppercase",
-              color: "#000", background: "#fff",
-              padding: "13px 32px", borderRadius: 2,
-              textDecoration: "none",
-            }}>Get a Quote →</a>
-          </div>
-
-          <div style={{
-            position: "absolute", bottom: "-30vh", right: 0,
-            fontFamily: "'Syne', sans-serif",
-            fontSize: "clamp(80px, 20vw, 140px)",
-            fontWeight: 800, color: "rgba(255,255,255,0.03)",
-            lineHeight: 1, letterSpacing: "-0.04em",
-            userSelect: "none", pointerEvents: "none",
-          }}>BUILD</div>
+      <div id="mobile-menu" className={`vmenu${open ? " is-open" : ""}`} aria-hidden={!open}>
+        <div className="vmenu-grid" />
+        <ul>
+          {LINKS.map((l, i) => (
+            <li key={l.id} style={{ transitionDelay: open ? `${0.1 + i * 0.06}s` : "0s" }}>
+              <a
+                href={`#${l.id}`}
+                className="vmlink"
+                aria-current={active === l.id ? "true" : undefined}
+                onClick={() => setOpen(false)}
+                tabIndex={open ? 0 : -1}
+              >
+                {l.label}
+                <span className="dot" />
+              </a>
+            </li>
+          ))}
+        </ul>
+        <div className="vmenu-foot">
+          <a href="#contact" className="vcta" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>
+            Get a quote
+          </a>
         </div>
+        <div className="vmark" aria-hidden="true">Build</div>
       </div>
     </>
-  );
+  )
 }

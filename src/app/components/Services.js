@@ -6,27 +6,27 @@ export default function Services() {
     {
       title: "M Sand",
       desc: "Double washed clean M-sand",
-      img: "/msand.jpg"
+      img: "/msand4.jpeg"
     },
     {
       title: "White M Sand",
       desc: "Double washed.Quality equal to river sand ",
-      img: "/white msand.jpg"
+      img: "/msand1.webp"
     },
     {
       title: "P Sand",
       desc: "Double washed. Perfect for plastering purpose",
-      img: "/psand.jpg"
+      img: "msand2.webp"
     },
     {
       title: "20MM",
       desc: "Perfect sized gravel for construction",
-      img: "/20mm.jpg"
+      img: "40mm.webp"
     },
     {
       title: "Aggregates",
       desc: "6mm, 12mm, 14mm and more",
-      img: "/aggregates.jpeg"
+      img: "/20mm.jpeg"
     },
     {
       title: "Dust",
