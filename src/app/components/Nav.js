@@ -221,7 +221,7 @@ export default function Nav() {
           onClick={() => setOpen(false)}
         >
           <div className="logo-wrap">
-            <img src="/logo1.jpg" alt="" />
+            <img src="/logo5.jpg" alt="" />
           </div>
           {/* <span style={{color:"white"}}>Vetrivel</span> */}
         </a>
