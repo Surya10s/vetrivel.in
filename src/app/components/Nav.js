@@ -6,6 +6,8 @@ const LINKS = [
   { label: "Materials", id: "materials" },
   { label: "Fleet", id: "fleet" },
   { label: "Why us", id: "why-us" },
+  { label: "Gallery", id: "gallery" },
+  { label: "Reviews", id: "feedback" },
   { label: "Contact", id: "contact" },
 ]
 
@@ -221,9 +223,9 @@ export default function Nav() {
           onClick={() => setOpen(false)}
         >
           <div className="logo-wrap">
-            <img src="/logo5.jpg" alt="" />
+            <img src="/logo8.jpg" alt="" />
           </div>
-          {/* <span style={{color:"white"}}>Vetrivel</span> */}
+          <span style={{color:"white"}}>Vetrivel</span>
         </a>
 
         <ul className="vlinks">

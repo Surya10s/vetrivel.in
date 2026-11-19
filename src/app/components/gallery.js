@@ -310,7 +310,7 @@ export default function Gallery() {
                 }
             `}</style>
 
-            <div className="gl-inner">
+            <div className="gl-inner" >
                 <div className="gl-head">
                     <h1 id="gallery-title">
                         Gallery <span>M-sand, P-sand &amp; aggregate supply across Chennai</span>

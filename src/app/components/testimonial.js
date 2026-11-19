@@ -63,7 +63,7 @@ const summary = [
 
 export default function Testimonials() {
     return (
-        <section className="tm" aria-labelledby="tm-title">
+        <section className="tm" id="feedback" aria-labelledby="tm-title">
             <style>{`
                 .tm {
                     background: #fafafa;

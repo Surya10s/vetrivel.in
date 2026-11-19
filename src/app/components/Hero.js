@@ -27,7 +27,7 @@ export default function Hero() {
     const products = ["M-Sand", "P-Sand", "Aggregates", "Gravel"]
 
     return (
-        <section className="hero" aria-labelledby="hero-title">
+        <section className="hero" id="about" aria-labelledby="hero-title">
             <style>{`
                 .hero {
                     background: #fff;
